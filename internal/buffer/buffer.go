@@ -18,6 +18,18 @@ type Buffer struct {
 	rear  int
 }
 
+type DecBuf interface {
+	Available() int
+	Buffered() int
+	Cap() int
+	DecByteAt(dist int) byte
+	Peek(p []byte) (n int, err error)
+	Read(p []byte) (n int, err error)
+	Write(p []byte) (n int, err error)
+	WriteByte(c byte) error
+	WriteMatch(dist int64, length int) error
+}
+
 // newBuffer creates a buffer with the given size.
 func NewBuffer(size int) *Buffer {
 	return &Buffer{data: make([]byte, size+1)}

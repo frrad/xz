@@ -274,7 +274,7 @@ func (t *hashTable) NextOp(rep [4]uint32) operation {
 		// the given distance, we test the first byte that would
 		// make the match longer. If it doesn't match the byte
 		// to match, we don't to care any longer.
-		if t.dict.buf.ByteAtRP(m.n-dist) == data[m.n] {
+		if t.dict.buf.EncByteAt(-m.n+dist) == data[m.n] {
 			// We can't get a longer match. Jump to the next
 			// distance.
 			continue

@@ -5,26 +5,22 @@ import (
 	"io"
 )
 
-func (buf *Buffer) ByteAt(i int) byte {
+func (b *Buffer) ByteAt(i int) byte {
 	if i < 0 {
-		i += len(buf.data)
-	} else if i >= len(buf.data) {
-		i -= len(buf.data)
+		i += len(b.data)
+	} else if i >= len(b.data) {
+		i -= len(b.data)
 	}
 
-	return buf.data[i]
-}
-
-func (buf *Buffer) ByteAtRP(rearPlus int) byte {
-	return buf.ByteAt(buf.rear + rearPlus)
+	return b.data[i]
 }
 
 func (b *Buffer) DecByteAt(dist int) byte {
 	return b.ByteAt(b.front - dist)
 }
 
-func (b *Buffer) EncByteAt(distance int) byte {
-	return b.ByteAt(b.rear - distance)
+func (b *Buffer) EncByteAt(dist int) byte {
+	return b.ByteAt(b.rear - dist)
 }
 
 func (b *Buffer) CopyN(w io.Writer, n int) (written int, err error) {
