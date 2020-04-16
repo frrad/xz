@@ -8,6 +8,8 @@ import (
 	"bufio"
 	"errors"
 	"io"
+
+	"github.com/ulikunitz/xz/internal/buffer"
 )
 
 // MinDictCap and MaxDictCap provide the range of supported dictionary
@@ -179,7 +181,7 @@ func (w *Writer) Write(p []byte) (n int, err error) {
 		}
 		if m < int64(len(p)) {
 			p = p[:m]
-			err = ErrNoSpace
+			err = buffer.ErrNoSpace
 		}
 	}
 	var werr error

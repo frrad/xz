@@ -6,13 +6,14 @@ package lzma
 
 import (
 	"errors"
-	"fmt"
+
+	"github.com/ulikunitz/xz/internal/buffer"
 )
 
 // decoderDict provides the dictionary for the decoder. The whole
 // dictionary is used as reader buffer.
 type decoderDict struct {
-	buf  buffer
+	buf  buffer.Buffer
 	head int64
 }
 
@@ -23,7 +24,7 @@ func newDecoderDict(dictCap int) (d *decoderDict, err error) {
 	if !(1 <= dictCap && int64(dictCap) <= MaxDictCap) {
 		return nil, errors.New("lzma: dictCap out of range")
 	}
-	d = &decoderDict{buf: *newBuffer(dictCap)}
+	d = &decoderDict{buf: *buffer.NewBuffer(dictCap)}
 	return d, nil
 }
 
@@ -62,11 +63,7 @@ func (d *decoderDict) byteAt(dist int) byte {
 	if !(0 < dist && dist <= d.dictLen()) {
 		return 0
 	}
-	i := d.buf.front - dist
-	if i < 0 {
-		i += len(d.buf.data)
-	}
-	return d.buf.data[i]
+	return d.buf.DecByteAt(dist)
 }
 
 // writeMatch writes the match at the top of the dictionary. The given
@@ -84,32 +81,11 @@ func (d *decoderDict) writeMatch(dist int64, length int) error {
 		return errors.New("writeMatch: length out of range")
 	}
 	if length > d.buf.Available() {
-		return ErrNoSpace
+		return buffer.ErrNoSpace
 	}
 	d.head += int64(length)
 
-	i := d.buf.front - int(dist)
-	if i < 0 {
-		i += len(d.buf.data)
-	}
-	for length > 0 {
-		var p []byte
-		if i >= d.buf.front {
-			p = d.buf.data[i:]
-			i = 0
-		} else {
-			p = d.buf.data[i:d.buf.front]
-			i = d.buf.front
-		}
-		if len(p) > length {
-			p = p[:length]
-		}
-		if _, err := d.buf.Write(p); err != nil {
-			panic(fmt.Errorf("d.buf.Write returned error %s", err))
-		}
-		length -= len(p)
-	}
-	return nil
+	return d.buf.WriteMatch(dist, length)
 }
 
 // Write writes the given bytes into the dictionary and advances the

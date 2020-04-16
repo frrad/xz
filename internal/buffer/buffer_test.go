@@ -2,7 +2,7 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package lzma
+package buffer
 
 import (
 	"bytes"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestBuffer_Write(t *testing.T) {
-	buf := newBuffer(10)
+	buf := NewBuffer(10)
 	b := []byte("1234567890")
 	for i := range b {
 		n, err := buf.Write(b[i : i+1])
@@ -55,7 +55,7 @@ func TestBuffer_Write(t *testing.T) {
 }
 
 func TestBuffer_Buffered_Available(t *testing.T) {
-	buf := newBuffer(19)
+	buf := NewBuffer(19)
 	b := []byte("0123456789")
 	var err error
 	if _, err = buf.Write(b); err != nil {
@@ -76,7 +76,7 @@ func TestBuffer_Buffered_Available(t *testing.T) {
 }
 
 func TestBuffer_Read(t *testing.T) {
-	buf := newBuffer(10)
+	buf := NewBuffer(10)
 	b := []byte("0123456789")
 	var err error
 	if _, err = buf.Write(b); err != nil {
@@ -130,7 +130,7 @@ func TestBuffer_Read(t *testing.T) {
 }
 
 func TestBuffer_Discard(t *testing.T) {
-	buf := newBuffer(10)
+	buf := NewBuffer(10)
 	b := []byte("0123456789")
 	var err error
 	if _, err = buf.Write(b); err != nil {
@@ -166,7 +166,7 @@ func TestBuffer_Discard(t *testing.T) {
 }
 
 func TestBuffer_Discard_error(t *testing.T) {
-	buf := newBuffer(10)
+	buf := NewBuffer(10)
 	n, err := buf.Discard(-1)
 	if err == nil {
 		t.Fatal("buf.Discard(-1) didn't return an error")
@@ -201,7 +201,7 @@ func TestPrefixLen(t *testing.T) {
 }
 
 func TestMatchLen(t *testing.T) {
-	buf := newBuffer(13)
+	buf := NewBuffer(13)
 	const s = "abcaba"
 	_, err := io.WriteString(buf, s)
 	if err != nil {
@@ -220,7 +220,7 @@ func TestMatchLen(t *testing.T) {
 	}
 	tests := []struct{ d, n int }{{1, 1}, {3, 2}, {6, 6}, {5, 0}, {2, 0}}
 	for _, c := range tests {
-		n := buf.matchLen(c.d, []byte(s))
+		n := buf.MatchLen(c.d, []byte(s))
 		if n != c.n {
 			t.Errorf(
 				"MatchLen(%d,[]byte(%q)) returned %d; want %d",

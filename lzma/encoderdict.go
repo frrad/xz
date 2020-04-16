@@ -8,6 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"github.com/ulikunitz/xz/internal/buffer"
 )
 
 // matcher is an interface that supports the identification of the next
@@ -21,7 +23,7 @@ type matcher interface {
 // encoderDict provides the dictionary of the encoder. It includes an
 // addtional buffer atop of the actual dictionary.
 type encoderDict struct {
-	buf      buffer
+	buf      buffer.Buffer
 	m        matcher
 	head     int64
 	capacity int
@@ -41,7 +43,7 @@ func newEncoderDict(dictCap, bufSize int, m matcher) (d *encoderDict, err error)
 			"lzma: buffer size must be larger than zero")
 	}
 	d = &encoderDict{
-		buf:      *newBuffer(dictCap + bufSize),
+		buf:      *buffer.NewBuffer(dictCap + bufSize),
 		capacity: dictCap,
 		m:        m,
 	}
@@ -91,7 +93,7 @@ func (d *encoderDict) Write(p []byte) (n int, err error) {
 	m := d.Available()
 	if len(p) > m {
 		p = p[:m]
-		err = ErrNoSpace
+		err = buffer.ErrNoSpace
 	}
 	var e error
 	if n, e = d.buf.Write(p); e != nil {
@@ -108,11 +110,8 @@ func (d *encoderDict) ByteAt(distance int) byte {
 	if !(0 < distance && distance <= d.Len()) {
 		return 0
 	}
-	i := d.buf.rear - distance
-	if i < 0 {
-		i += len(d.buf.data)
-	}
-	return d.buf.data[i]
+
+	return d.buf.EncByteAt(distance)
 }
 
 // CopyN copies the last n bytes from the dictionary into the provided
@@ -125,24 +124,9 @@ func (d *encoderDict) CopyN(w io.Writer, n int) (written int, err error) {
 	m := d.Len()
 	if n > m {
 		n = m
-		err = ErrNoSpace
+		err = buffer.ErrNoSpace
 	}
-	i := d.buf.rear - n
-	var e error
-	if i < 0 {
-		i += len(d.buf.data)
-		if written, e = w.Write(d.buf.data[i:]); e != nil {
-			return written, e
-		}
-		i = 0
-	}
-	var k int
-	k, e = w.Write(d.buf.data[i:d.buf.rear])
-	written += k
-	if e != nil {
-		err = e
-	}
-	return written, err
+	return d.buf.CopyN(w, n)
 }
 
 // Buffered returns the number of bytes in the buffer.

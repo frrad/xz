@@ -7,6 +7,8 @@ package lzma
 import (
 	"fmt"
 	"io"
+
+	"github.com/ulikunitz/xz/internal/buffer"
 )
 
 // opLenMargin provides the upper limit of the number of bytes required
@@ -78,7 +80,7 @@ func (e *encoder) Write(p []byte) (n int, err error) {
 	for {
 		k, err := e.dict.Write(p[n:])
 		n += k
-		if err == ErrNoSpace {
+		if err == buffer.ErrNoSpace {
 			if err = e.compress(0); err != nil {
 				return n, err
 			}

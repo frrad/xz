@@ -94,7 +94,7 @@ func newHashTable(capacity int, wordLen int) (t *hashTable, err error) {
 	t = &hashTable{
 		t:       make([]int64, n),
 		data:    make([]uint32, capacity),
-		mask:    (uint64(1) << uint(exp)) - 1,
+		mask:    uint64(1)<<uint(exp) - 1,
 		hoff:    -int64(wordLen),
 		wordLen: wordLen,
 		wr:      newRoller(wordLen),
@@ -274,17 +274,13 @@ func (t *hashTable) NextOp(rep [4]uint32) operation {
 		// the given distance, we test the first byte that would
 		// make the match longer. If it doesn't match the byte
 		// to match, we don't to care any longer.
-		i := t.dict.buf.rear - dist + m.n
-		if i < 0 {
-			i += len(t.dict.buf.data)
-		}
-		if t.dict.buf.data[i] != data[m.n] {
+		if t.dict.buf.ByteAtRP(m.n-dist) == data[m.n] {
 			// We can't get a longer match. Jump to the next
 			// distance.
 			continue
 		}
 
-		n := t.dict.buf.matchLen(dist, data)
+		n := t.dict.buf.MatchLen(dist, data)
 		switch n {
 		case 0:
 			continue
