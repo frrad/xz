@@ -63,7 +63,7 @@ func (d *decoderDict) byteAt(dist int) byte {
 	if !(0 < dist && dist <= d.dictLen()) {
 		return 0
 	}
-	return d.buf.DecByteAt(dist)
+	return buffer.DecByteAt(d.buf, dist)
 }
 
 // writeMatch writes the match at the top of the dictionary. The given

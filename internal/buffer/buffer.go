@@ -22,7 +22,6 @@ type DecBuf interface {
 	Available() int
 	Buffered() int
 	Cap() int
-	DecByteAt(dist int) byte
 	Peek(p []byte) (n int, err error)
 	PeekTail(dist int64, length int) ([]byte, error)
 	Read(p []byte) (n int, err error)
@@ -105,6 +104,8 @@ func (b *Buffer) Peek(p []byte) (n int, err error) {
 // PeekTail returns a view into the buffer n bytes before its end with length at
 // most the given length. It may return fewer than length bytes, but should not
 // return zero bytes and nil error.
+//
+// If length > dist, at most dist bytes are returned, but this is not an error.
 func (b *Buffer) PeekTail(dist int64, length int) ([]byte, error) {
 	i := b.front - int(dist)
 	if i < 0 {
@@ -203,4 +204,14 @@ func (b *Buffer) MatchLen(distance int, p []byte) int {
 	}
 	n += prefixLen(p, b.data[i:])
 	return n
+}
+
+func (b *Buffer) byteAt(i int) byte {
+	if i < 0 {
+		i += len(b.data)
+	} else if i >= len(b.data) {
+		i -= len(b.data)
+	}
+
+	return b.data[i]
 }

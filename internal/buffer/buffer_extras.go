@@ -5,22 +5,8 @@ import (
 	"io"
 )
 
-func (b *Buffer) ByteAt(i int) byte {
-	if i < 0 {
-		i += len(b.data)
-	} else if i >= len(b.data) {
-		i -= len(b.data)
-	}
-
-	return b.data[i]
-}
-
-func (b *Buffer) DecByteAt(dist int) byte {
-	return b.ByteAt(b.front - dist)
-}
-
 func (b *Buffer) EncByteAt(dist int) byte {
-	return b.ByteAt(b.rear + dist)
+	return b.byteAt(b.rear + dist)
 }
 
 func (b *Buffer) CopyN(w io.Writer, n int) (written int, err error) {
@@ -61,4 +47,13 @@ func WriteMatch(b DecBuf, dist int64, length int) error {
 	}
 
 	return nil
+}
+
+// DecBytAt retrieves the byte dist bytes from the end of buffered data
+func DecByteAt(b DecBuf, dist int) byte {
+	bs, err := b.PeekTail(int64(dist), 1)
+	if err != nil {
+		panic(err)
+	}
+	return bs[0]
 }
