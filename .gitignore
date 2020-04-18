@@ -24,3 +24,5 @@ cmd/xb/xb
 # default compression test file
 enwik8*
 /fox
+/*.pdf
+/*.svg
