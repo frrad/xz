@@ -24,7 +24,7 @@ func newDecoderDict(dictCap int) (d *decoderDict, err error) {
 	if !(1 <= dictCap && int64(dictCap) <= MaxDictCap) {
 		return nil, errors.New("lzma: dictCap out of range")
 	}
-	d = &decoderDict{buf: buffer.NewBuffer(dictCap)}
+	d = &decoderDict{buf: buffer.NewOnDemandBuffer(dictCap)}
 	return d, nil
 }
 
