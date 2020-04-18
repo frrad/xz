@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"testing"
 )
@@ -16,11 +17,52 @@ func TestReaderAtBlocks(t *testing.T) {
 }
 
 func BenchmarkBlocks(b *testing.B) {
-	f, fileSize := testOpenFile(b, "testfiles/fox.blocks.xz")
+	f, fileSize := testOpenFile(b,
+		"/home/frederickrobinson/skyhub/index.csv.xz")
+
+	conf := ReaderAtConfig{
+		Len: fileSize,
+	}
+	r, err := conf.NewReaderAt(f)
+	if err != nil {
+		b.Fatalf("NewReader error %s", err)
+	}
+
+	bytesToRead := 100
+
+	decompressedMaxLen := r.Size()
+	random(b, bytesToRead, decompressedMaxLen, r)
+}
+
+func BenchmarkBlocksFromMemory(b *testing.B) {
+	fileBytes, err := ioutil.ReadFile("/home/frederickrobinson/skyhub/index.csv.xz")
+	fileReader := bytes.NewReader(fileBytes)
+
+	conf := ReaderAtConfig{
+		Len: int64(len(fileBytes)),
+	}
+	r, err := conf.NewReaderAt(fileReader)
+	if err != nil {
+		b.Fatalf("NewReader error %s", err)
+	}
+
+	bytesToRead := 100
+
+	decompressedMaxLen := r.Size()
+	random(b, bytesToRead, decompressedMaxLen, r)
+}
+
+func random(b *testing.B, bytesToRead int, decompressedMaxLen int64, r io.ReaderAt) {
+	decompressedBytes := make([]byte, bytesToRead)
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		testFilePart(b, f, fileSize, foxSentenceConst, 0, len(foxSentenceConst))
+		start := rand.Int63n(decompressedMaxLen)
+
+		_, err := r.ReadAt(decompressedBytes, int64(start))
+		if err != nil && err != io.EOF {
+			b.Fatalf("error while reading at: %v", err)
+		}
 	}
 }
 
