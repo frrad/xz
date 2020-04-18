@@ -409,7 +409,7 @@ func (t *binTree) match(m match, distIter func() (int, bool), p matchParams,
 		}
 		checked++
 		if m.n > 0 {
-			if buf.EncByteAt(dist-m.n+1) == t.data[m.n-1] {
+			if buf.EncByteAt(-dist+m.n-1) == t.data[m.n-1] {
 				if p.stopShorter {
 					return m, checked, false
 				}

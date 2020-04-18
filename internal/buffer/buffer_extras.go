@@ -20,7 +20,7 @@ func (b *Buffer) DecByteAt(dist int) byte {
 }
 
 func (b *Buffer) EncByteAt(dist int) byte {
-	return b.ByteAt(b.rear - dist)
+	return b.ByteAt(b.rear + dist)
 }
 
 func (b *Buffer) CopyN(w io.Writer, n int) (written int, err error) {
@@ -42,27 +42,23 @@ func (b *Buffer) CopyN(w io.Writer, n int) (written int, err error) {
 	return written, err
 }
 
-func (b *Buffer) WriteMatch(dist int64, length int) error {
-	i := b.front - int(dist)
-	if i < 0 {
-		i += len(b.data)
-	}
+func WriteMatch(b DecBuf, dist int64, length int) error {
 	for length > 0 {
-		var p []byte
-		if i >= b.front {
-			p = b.data[i:]
-			i = 0
-		} else {
-			p = b.data[i:b.front]
-			i = b.front
+		p, err := b.PeekTail(dist, length)
+		if err != nil {
+			return err
 		}
-		if len(p) > length {
-			p = p[:length]
-		}
-		if _, err := b.Write(p); err != nil {
+
+		written, err := b.Write(p)
+		if err != nil {
 			panic(fmt.Errorf("b.Write returned error %s", err))
 		}
-		length -= len(p)
+		if written != len(p) {
+			panic(fmt.Errorf("didn't write entire buffer:  %s", err))
+		}
+
+		length -= written
 	}
+
 	return nil
 }

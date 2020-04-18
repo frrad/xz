@@ -24,10 +24,10 @@ type DecBuf interface {
 	Cap() int
 	DecByteAt(dist int) byte
 	Peek(p []byte) (n int, err error)
+	PeekTail(dist int64, length int) ([]byte, error)
 	Read(p []byte) (n int, err error)
 	Write(p []byte) (n int, err error)
 	WriteByte(c byte) error
-	WriteMatch(dist int64, length int) error
 }
 
 // newBuffer creates a buffer with the given size.
@@ -100,6 +100,29 @@ func (b *Buffer) Peek(p []byte) (n int, err error) {
 		copy(p[k:], b.data)
 	}
 	return n, nil
+}
+
+// PeekTail returns a view into the buffer n bytes before its end with length at
+// most the given length. It may return fewer than length bytes, but should not
+// return zero bytes and nil error.
+func (b *Buffer) PeekTail(dist int64, length int) ([]byte, error) {
+	i := b.front - int(dist)
+	if i < 0 {
+		i += len(b.data)
+	}
+
+	var p []byte
+	if i >= b.front {
+		p = b.data[i:]
+	} else {
+		p = b.data[i:b.front]
+	}
+
+	if len(p) > length {
+		p = p[:length]
+	}
+
+	return p, nil
 }
 
 // Discard skips the n next bytes to read from the buffer, returning the

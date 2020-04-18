@@ -111,7 +111,7 @@ func (d *encoderDict) ByteAt(distance int) byte {
 		return 0
 	}
 
-	return d.buf.EncByteAt(distance)
+	return d.buf.EncByteAt(-distance)
 }
 
 // CopyN copies the last n bytes from the dictionary into the provided

@@ -85,7 +85,7 @@ func (d *decoderDict) writeMatch(dist int64, length int) error {
 	}
 	d.head += int64(length)
 
-	return d.buf.WriteMatch(dist, length)
+	return buffer.WriteMatch(d.buf, dist, length)
 }
 
 // Write writes the given bytes into the dictionary and advances the
